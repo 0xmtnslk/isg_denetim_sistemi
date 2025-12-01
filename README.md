@@ -183,7 +183,7 @@ apt install -y chromium-browser
 cd /home/ubuntu
 
 # GitHub'dan klonla (veya projeyi buraya kopyalayın)
-# git clone https://github.com/KULLANICI_ADINIZ/isg_denetim_sistemi.git
+# git clone https://github.com/0xmtnslk/isg_denetim_sistemi.git
 
 # Proje dizinine git
 cd isg_denetim_sistemi
