@@ -11,7 +11,7 @@ import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import EmptyState from '@/components/ui/EmptyState';
-import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@/components/ui/Table';
+import { TableHead, TableRow, TableHeader, TableCell } from '@/components/ui/Table';
 import Pagination from '@/components/ui/Pagination';
 import Badge from '@/components/ui/Badge';
 
@@ -337,7 +337,7 @@ export default function GroupsPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <TableHead>
                 <TableRow>
-                  <TableHeader className="w-12"></TableHeader>
+                  <TableHeader className="w-12" />
                   <TableHeader>Grup Adı</TableHeader>
                   <TableHeader>Açıklama</TableHeader>
                   <TableHeader>Üye Sayısı</TableHeader>
