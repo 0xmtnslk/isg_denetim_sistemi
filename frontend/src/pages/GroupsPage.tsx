@@ -337,7 +337,7 @@ export default function GroupsPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <TableHead>
                 <TableRow>
-                  <TableHeader className="w-12" />
+                  <TableHeader className="w-12"> </TableHeader>
                   <TableHeader>Grup Adı</TableHeader>
                   <TableHeader>Açıklama</TableHeader>
                   <TableHeader>Üye Sayısı</TableHeader>
