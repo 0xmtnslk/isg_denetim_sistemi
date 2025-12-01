@@ -2,6 +2,13 @@
 
 İş Sağlığı ve Güvenliği (İSG) saha denetimleri için geliştirilmiş modern web uygulaması.
 
+## ⚠️ ÖNEMLİ NOTLAR
+
+- Bu dokümantasyonda `/home/ubuntu/isg_denetim_sistemi/` dizini kullanılmıştır
+- **Eğer root kullanıcısı olarak kurulum yapıyorsanız** `/root/isg_denetim_sistemi/` kullanın
+- **Path'leri kendi kurulum dizininize göre değiştirmeyi unutmayın!**
+- Bu dokümantasyon, gerçek kurulum sırasında karşılaşılan sorunlar ve çözümleriyle güncellenmiştir
+
 ## 📋 İçindekiler
 
 - [Özellikler](#özellikler)
@@ -183,7 +190,7 @@ apt install -y chromium-browser
 cd /home/ubuntu
 
 # GitHub'dan klonla (veya projeyi buraya kopyalayın)
-# git clone https://github.com/0xmtnslk/isg_denetim_sistemi.git
+# git clone https://github.com/KULLANICI_ADINIZ/isg_denetim_sistemi.git
 
 # Proje dizinine git
 cd isg_denetim_sistemi
@@ -254,10 +261,14 @@ docker exec -it isg_postgres psql -U isg_admin -d isg_denetim
 cd /home/ubuntu/isg_denetim_sistemi/backend
 
 # Node.js paketlerini kur (bu işlem birkaç dakika sürebilir)
-npm install
+# ⚠️ ÖNEMLİ: Dependency conflict hatası alırsanız --legacy-peer-deps kullanın
+npm install --legacy-peer-deps
 
 # Kurulum tamamlandığında şu mesajı görmelisiniz:
 # added XXX packages
+
+# ⚠️ NOT: Eğer "ERESOLVE unable to resolve dependency tree" hatası alırsanız,
+# yukarıdaki komutta --legacy-peer-deps flag'i mutlaka kullanılmalıdır
 ```
 
 #### 4.2. Environment Değişkenlerini Ayarla
@@ -270,10 +281,11 @@ cp .env.example .env
 nano .env
 ```
 
-**.env içeriği** (gerekirse şifreleri değiştirin):
+**.env içeriği** (gerekirse şifreleri ve IP adreslerini değiştirin):
 
 ```env
 # Database
+# ⚠️ ÖNEMLİ: Kullanıcı adı, şifre ve veritabanı adı docker-compose.yml ile eşleşmeli
 DATABASE_URL="postgresql://isg_admin:isg_secure_password_2024@localhost:5432/isg_denetim?schema=public"
 
 # JWT Secret (ÖNEMLİ: Production'da mutlaka değiştirin!)
@@ -283,8 +295,11 @@ JWT_SECRET="isg-secret-key-2024-change-this-in-production"
 PORT=3000
 NODE_ENV=production
 
-# Frontend URL (CORS için)
+# Frontend URL (CORS için - ⚠️ MUTLAKA EKLEYIN!)
+# Localhost kurulumu için:
 FRONTEND_URL="http://localhost:5173"
+# Veya sunucu IP'niz varsa (örnek):
+# FRONTEND_URL="http://77.42.22.226:5173"
 ```
 
 **Kaydet ve çık**: `Ctrl+X`, sonra `Y`, sonra `Enter`
@@ -295,16 +310,27 @@ FRONTEND_URL="http://localhost:5173"
 # Prisma client oluştur
 npx prisma generate
 
-# Database migration'ları çalıştır
-npx prisma migrate deploy
+# Database schema'yı veritabanına uygula
+# ⚠️ ÖNEMLİ: migrate deploy yerine db push kullanın
+# Çünkü migration dosyaları henüz oluşturulmamış olabilir
+npx prisma db push
+
+# Başarılı olursa şu mesajı göreceksiniz:
+# 🚀 Your database is now in sync with your Prisma schema.
 
 # Seed data ekle (ilk admin kullanıcısı oluşturur)
+# ⚠️ ÖNEMLİ: "npm run seed" değil, "npm run prisma:seed" kullanın
 npm run prisma:seed
 
 # Başarılı olursa şu çıktıyı göreceksiniz:
 # ✅ Admin kullanıcısı oluşturuldu:
 #    Kullanıcı Adı: admin
 #    Şifre: Admin123!
+
+# ⚠️ SORUN GİDERME:
+# Eğer "npm run prisma:seed" çalışmazsa, package.json'da seed script'ini kontrol edin
+# Alternatif olarak direkt çalıştırabilirsiniz:
+# npx ts-node prisma/seed.ts
 ```
 
 #### 4.4. Backend'i Derleme
@@ -316,7 +342,9 @@ npm run build
 # Derleme başarılıysa dist/ klasörü oluşacak
 ls -la dist/
 
-# main.js dosyasını göreceksiniz
+# ⚠️ ÖNEMLİ: Build path'i kontrol edin
+# Doğru path: dist/src/main.js (dist/main.js DEĞİL!)
+ls -la dist/src/main.js
 ```
 
 #### 4.5. Backend'i Test Et (Manuel)
@@ -328,6 +356,10 @@ npm run start:prod
 # Başarılıysa şu mesajları göreceksiniz:
 # 🟢 Veritabanı bağlantısı kuruldu
 # 🚀 İSG Denetim Sistemi Backend başlatıldı: http://localhost:3000
+
+# ⚠️ ÖNEMLİ NOT: main.ts dosyasında backend'in 0.0.0.0 adresine bind olduğundan emin olun
+# await app.listen(port, '0.0.0.0'); şeklinde olmalı
+# Aksi takdirde sadece localhost'tan erişilebilir, dışarıdan erişilemez
 
 # Başka bir terminalde test et:
 curl http://localhost:3000/api
@@ -346,7 +378,11 @@ curl http://localhost:3000/api
 cd /home/ubuntu/isg_denetim_sistemi/frontend
 
 # Node.js paketlerini kur
-npm install
+# ⚠️ ÖNEMLİ: Backend gibi, burada da --legacy-peer-deps kullanın
+npm install --legacy-peer-deps
+
+# ⚠️ NOT: Eğer dependency conflict hatası alırsanız,
+# yukarıdaki komutta --legacy-peer-deps flag'i mutlaka kullanılmalıdır
 ```
 
 #### 5.2. Environment Değişkenlerini Ayarla
@@ -359,11 +395,20 @@ cp .env.example .env
 nano .env
 ```
 
-**.env içeriği**:
+**.env içeriği** (sunucu IP'nizi veya localhost kullanın):
 
 ```env
-# API URL (sunucu IP'nizi yazın veya localhost bırakın)
+# API URL - ⚠️ MUTLAKA SONUNDA /api OLMALI!
+# Localhost kurulumu için:
 VITE_API_URL=http://localhost:3000/api
+
+# Veya sunucu IP'niz varsa (örnek):
+# VITE_API_URL=http://77.42.22.226:3000/api
+
+# ⚠️ ÖNEMLİ HATIRLATMA:
+# - URL'nin sonunda /api olmalı (http://localhost:3000/api ✅)
+# - /api olmadan çalışmaz (http://localhost:3000 ❌)
+# - Backend'deki FRONTEND_URL ile eşleşmeli (CORS için)
 ```
 
 **Kaydet ve çık**: `Ctrl+X`, sonra `Y`, sonra `Enter`
@@ -394,14 +439,28 @@ serve --version
 
 ### 6. Systemd Servisleri
 
-#### 6.1. Service Dosyalarını Kopyala
+#### 6.1. Service Dosyalarını Kopyala ve Düzenle
 
 ```bash
-# Backend service
+# Backend service dosyasını kopyala
 cp /home/ubuntu/isg_denetim_sistemi/systemd/isg-backend.service /etc/systemd/system/
 
-# Frontend service
+# Frontend service dosyasını kopyala
 cp /home/ubuntu/isg_denetim_sistemi/systemd/isg-frontend.service /etc/systemd/system/
+
+# ⚠️ ÖNEMLİ: Service dosyalarındaki path'leri kontrol edin ve düzenleyin
+# Eğer root kullanıcısı olarak /root dizininde kurulum yaptıysanız:
+nano /etc/systemd/system/isg-backend.service
+# WorkingDirectory ve ExecStart satırlarındaki path'leri değiştirin:
+# /home/ubuntu/isg_denetim_sistemi/backend yerine
+# /root/isg_denetim_sistemi/backend yazın
+
+nano /etc/systemd/system/isg-frontend.service
+# WorkingDirectory ve ExecStart satırlarındaki path'leri değiştirin:
+# /home/ubuntu/isg_denetim_sistemi/frontend yerine
+# /root/isg_denetim_sistemi/frontend yazın
+
+# ⚠️ NOT: dist/main.js yerine dist/src/main.js olduğundan emin olun (backend service'de)
 
 # Dosyaların kopyalandığını kontrol et
 ls -la /etc/systemd/system/isg-*
@@ -501,7 +560,165 @@ tail -f /var/log/isg-frontend.log
 
 ## 🔧 Sorun Giderme
 
-### Backend Çalışmıyor
+Bu bölüm, gerçek kurulum sırasında karşılaşılan ve çözülen sorunları içerir.
+
+### 1. NPM Install Dependency Conflict Hatası
+
+**Sorun**: `npm install` komutu "ERESOLVE unable to resolve dependency tree" hatası veriyor.
+
+**Çözüm**:
+```bash
+# Backend için
+cd /home/ubuntu/isg_denetim_sistemi/backend
+npm install --legacy-peer-deps
+
+# Frontend için
+cd /home/ubuntu/isg_denetim_sistemi/frontend
+npm install --legacy-peer-deps
+```
+
+### 2. Prisma Migration Hatası
+
+**Sorun**: `npx prisma migrate deploy` çalışmıyor, migration dosyaları bulunamıyor.
+
+**Çözüm**: `migrate deploy` yerine `db push` kullanın:
+```bash
+cd /home/ubuntu/isg_denetim_sistemi/backend
+npx prisma db push
+npm run prisma:seed
+```
+
+### 3. Seed Script Bulunamıyor
+
+**Sorun**: `npm run seed` komutu çalışmıyor.
+
+**Çözüm**: Doğru komut `npm run prisma:seed`:
+```bash
+npm run prisma:seed
+
+# Eğer hala çalışmazsa:
+npx ts-node prisma/seed.ts
+```
+
+### 4. Backend Build Path Hatası
+
+**Sorun**: Systemd servisi backend'i başlatamıyor, `dist/main.js` bulunamıyor.
+
+**Çözüm**: Doğru path `dist/src/main.js`:
+```bash
+# Build sonrası kontrol edin:
+ls -la /home/ubuntu/isg_denetim_sistemi/backend/dist/src/main.js
+
+# Service dosyasını düzenleyin:
+nano /etc/systemd/system/isg-backend.service
+# ExecStart satırını şu şekilde değiştirin:
+# ExecStart=/usr/bin/node dist/src/main.js
+```
+
+### 5. Backend Dışarıdan Erişilemiyor
+
+**Sorun**: Backend localhost:3000'de çalışıyor ama dışarıdan erişilemiyor.
+
+**Çözüm**: `main.ts` dosyasında backend'in `0.0.0.0` adresine bind olduğundan emin olun:
+```typescript
+// backend/src/main.ts dosyasını düzenleyin
+await app.listen(port, '0.0.0.0'); // localhost yerine 0.0.0.0
+```
+
+Sonra rebuild ve restart:
+```bash
+cd /home/ubuntu/isg_denetim_sistemi/backend
+npm run build
+systemctl restart isg-backend
+```
+
+### 6. CORS Hatası - Frontend Backend'e Bağlanamıyor
+
+**Sorun**: Browser console'da CORS hatası: "Access to XMLHttpRequest blocked by CORS policy"
+
+**Çözüm**: Backend `.env` dosyasına `FRONTEND_URL` ekleyin:
+```bash
+nano /home/ubuntu/isg_denetim_sistemi/backend/.env
+
+# Şunu ekleyin (IP'nizi yazın):
+FRONTEND_URL="http://77.42.22.226:5173"
+
+# Servisi yeniden başlatın:
+systemctl restart isg-backend
+```
+
+### 7. Frontend API URL Hatası
+
+**Sorun**: Frontend backend'e istek atıyor ama 404 hatası alıyor.
+
+**Çözüm**: `VITE_API_URL` sonunda `/api` ile bitmeli:
+```bash
+nano /home/ubuntu/isg_denetim_sistemi/frontend/.env
+
+# Doğru format:
+VITE_API_URL=http://77.42.22.226:3000/api
+
+# Yanlış format:
+# VITE_API_URL=http://77.42.22.226:3000
+
+# Rebuild ve restart:
+cd /home/ubuntu/isg_denetim_sistemi/frontend
+npm run build
+systemctl restart isg-frontend
+```
+
+### 8. Systemd Service Path Hatası
+
+**Sorun**: Service dosyalarındaki path'ler yanlış (root dizininde kurulum yaptıysanız).
+
+**Çözüm**: Service dosyalarını düzenleyin:
+```bash
+# Backend service
+nano /etc/systemd/system/isg-backend.service
+# WorkingDirectory=/root/isg_denetim_sistemi/backend
+# ExecStart=/usr/bin/node /root/isg_denetim_sistemi/backend/dist/src/main.js
+
+# Frontend service
+nano /etc/systemd/system/isg-frontend.service
+# WorkingDirectory=/root/isg_denetim_sistemi/frontend
+# ExecStart=/usr/bin/npx serve -s /root/isg_denetim_sistemi/frontend/dist -l 5173
+
+# Daemon reload ve restart
+systemctl daemon-reload
+systemctl restart isg-backend isg-frontend
+```
+
+### 9. pgAdmin Bağlantı Hatası
+
+**Sorun**: pgAdmin'de database'e bağlanılamıyor.
+
+**Çözüm**: Doğru bağlantı bilgilerini kullanın:
+- **Host**: `isg_postgres` (localhost değil!)
+- **Port**: `5432`
+- **Database**: `isg_denetim`
+- **Username**: `isg_admin`
+- **Password**: `isg_secure_password_2024`
+
+### 10. Firewall Portları Kapalı
+
+**Sorun**: Sunucu IP'den uygulama açılmıyor.
+
+**Çözüm**: Gerekli portları açın:
+```bash
+# Firewall durumunu kontrol edin
+ufw status
+
+# Portları açın
+ufw allow 3000/tcp   # Backend
+ufw allow 5173/tcp   # Frontend
+ufw allow 5432/tcp   # PostgreSQL (opsiyonel)
+ufw allow 5050/tcp   # pgAdmin (opsiyonel)
+
+# Firewall'ı yeniden başlatın
+ufw reload
+```
+
+### 11. Genel Backend Sorunları
 
 ```bash
 # Servis durumunu kontrol et
@@ -515,9 +732,13 @@ systemctl restart isg-backend
 
 # Database bağlantısını test et
 docker exec -it isg_postgres psql -U isg_admin -d isg_denetim
+
+# Manuel olarak çalıştırıp hataları gör
+cd /home/ubuntu/isg_denetim_sistemi/backend
+npm run start:prod
 ```
 
-### Frontend Çalışmıyor
+### 12. Genel Frontend Sorunları
 
 ```bash
 # Servis durumunu kontrol et
@@ -534,7 +755,7 @@ cd /home/ubuntu/isg_denetim_sistemi/frontend
 npx serve -s dist -l 5173
 ```
 
-### Docker Container'lar Çalışmıyor
+### 13. Docker Container Sorunları
 
 ```bash
 # Container durumunu kontrol et
@@ -553,7 +774,7 @@ docker compose down
 docker compose up -d
 ```
 
-### Port Çakışmaları
+### 14. Port Çakışmaları
 
 ```bash
 # Hangi processin hangi portu kullandığını kontrol et
@@ -561,22 +782,25 @@ netstat -tulpn | grep :3000
 netstat -tulpn | grep :5173
 netstat -tulpn | grep :5432
 
-# Eğer port meşgulse, processi durdur veya farklı port kullan
+# Eğer port meşgulse, processi durdur
+kill -9 <PID>
+
+# Veya farklı port kullan (.env dosyalarını düzenleyin)
 ```
 
-### Database Migration Sorunları
+### 15. Database Tamamen Sıfırlama (Son Çare!)
 
 ```bash
 cd /home/ubuntu/isg_denetim_sistemi/backend
 
-# Migration'ları sıfırla (DİKKAT: Tüm veri silinir!)
-npx prisma migrate reset
-
-# Yeniden migration çalıştır
-npx prisma migrate deploy
+# ⚠️ DİKKAT: Tüm veri silinir!
+npx prisma db push --force-reset
 
 # Seed data ekle
 npm run prisma:seed
+
+# Backend'i yeniden başlat
+systemctl restart isg-backend
 ```
 
 ---
@@ -616,20 +840,28 @@ docker compose up -d
 #### 3. Firewall Ayarları (ufw)
 
 ```bash
+# SSH portunu ÖNCE açın (DİKKAT: Bunu yapmazsanız sunucuya erişemezsiniz!)
+ufw allow 22/tcp
+
 # ufw'yi aktif et
 ufw enable
 
-# SSH portunu aç (DİKKAT: Bunu yapmazsanız sunucuya erişemezsiniz!)
-ufw allow 22/tcp
-
-# Uygulama portlarını aç
-ufw allow 3000/tcp  # Backend
-ufw allow 5173/tcp  # Frontend
-ufw allow 5432/tcp  # PostgreSQL (sadece local erişim için)
-ufw allow 5050/tcp  # pgAdmin
+# ⚠️ ÖNEMLİ: Uygulama portlarını mutlaka açın!
+ufw allow 3000/tcp  # Backend API (Zorunlu)
+ufw allow 5173/tcp  # Frontend Web UI (Zorunlu)
+ufw allow 5432/tcp  # PostgreSQL (Opsiyonel - dışarıdan erişim gerekiyorsa)
+ufw allow 5050/tcp  # pgAdmin (Opsiyonel - web arayüzüne erişim gerekiyorsa)
 
 # Durumu kontrol et
-ufw status
+ufw status verbose
+
+# Port 3000 ve 5173'ün açık olduğunu görmelisiniz:
+# 3000/tcp                   ALLOW       Anywhere
+# 5173/tcp                   ALLOW       Anywhere
+
+# Test edin
+curl http://localhost:3000/api
+# Dışarıdan test: http://SUNUCU_IP:3000/api
 ```
 
 #### 4. Admin Şifresini Değiştirme
@@ -706,19 +938,143 @@ systemctl restart isg-frontend
 
 ## ✅ Kurulum Kontrol Listesi
 
-- [ ] Node.js 18+ kurulu
+### Sistem Gereksinimleri
+- [ ] Ubuntu 22.04 LTS kurulu
+- [ ] Node.js 18+ kurulu ve çalışıyor
 - [ ] Docker ve Docker Compose kurulu
+- [ ] Git kurulu
+
+### Veritabanı
 - [ ] PostgreSQL ve pgAdmin container'ları çalışıyor
-- [ ] Backend derlenmiş ve servis aktif
-- [ ] Frontend derlenmiş ve servis aktif
-- [ ] İlk admin girişi başarılı
+- [ ] pgAdmin'den database'e bağlanabiliyorum
+- [ ] Veritabanı bilgileri doğru (isg_denetim, isg_admin, isg_secure_password_2024)
+
+### Backend
+- [ ] `npm install --legacy-peer-deps` başarılı
+- [ ] `.env` dosyası oluşturuldu ve düzenlendi
+- [ ] `DATABASE_URL` doğru
+- [ ] `FRONTEND_URL` eklendi
+- [ ] `npx prisma db push` başarılı
+- [ ] `npm run prisma:seed` başarılı (admin kullanıcısı oluştu)
+- [ ] `npm run build` başarılı
+- [ ] `dist/src/main.js` dosyası var
+- [ ] `main.ts`'de `0.0.0.0` binding yapılmış
+- [ ] Backend servisi aktif ve çalışıyor
+- [ ] `curl http://localhost:3000/api` çalışıyor
+
+### Frontend
+- [ ] `npm install --legacy-peer-deps` başarılı
+- [ ] `.env` dosyası oluşturuldu
+- [ ] `VITE_API_URL` sonunda `/api` ile bitiyor
+- [ ] `npm run build` başarılı
+- [ ] `dist/` klasörü oluştu
+- [ ] Frontend servisi aktif ve çalışıyor
+- [ ] Web arayüzü açılıyor (http://SUNUCU_IP:5173)
+
+### Systemd Servisleri
+- [ ] Backend service dosyası path'leri doğru
+- [ ] Frontend service dosyası path'leri doğru
+- [ ] Her iki servis de `active (running)` durumunda
+- [ ] Log dosyaları oluşuyor ve hata yok
+
+### Güvenlik ve Erişim
+- [ ] Firewall portları açık (3000, 5173)
+- [ ] İlk admin girişi başarılı (admin / Admin123!)
 - [ ] Admin şifresi değiştirildi
-- [ ] JWT secret değiştirildi
-- [ ] Firewall ayarları yapıldı
-- [ ] Otomatik yedekleme aktif
+- [ ] JWT secret değiştirildi (production için)
+- [ ] CORS hatası yok
+
+### Test ve Yedekleme
+- [ ] Frontend'den backend'e istek atılabiliyor
+- [ ] Login çalışıyor
+- [ ] Kullanıcı oluşturulabiliyor
+- [ ] Otomatik yedekleme scripti kuruldu
+
+---
+
+## 🚀 Hızlı Başlangıç Özet
+
+Kurulum tamamlandıysa, bu özet adımları takip ederek sistemi hızlıca başlatabilirsiniz:
+
+### Servisleri Başlatma
+```bash
+# Docker container'ları başlat
+cd /home/ubuntu/isg_denetim_sistemi/docker
+docker compose up -d
+
+# Backend ve Frontend servislerini başlat
+systemctl start isg-backend
+systemctl start isg-frontend
+
+# Durumu kontrol et
+systemctl status isg-backend isg-frontend
+```
+
+### Servisleri Durdurma
+```bash
+# Backend ve Frontend servislerini durdur
+systemctl stop isg-backend isg-frontend
+
+# Docker container'ları durdur
+cd /home/ubuntu/isg_denetim_sistemi/docker
+docker compose down
+```
+
+### Logları İzleme
+```bash
+# Backend logları
+tail -f /var/log/isg-backend.log
+
+# Frontend logları
+tail -f /var/log/isg-frontend.log
+
+# Hata logları
+tail -f /var/log/isg-backend-error.log
+```
+
+### Hızlı Test
+```bash
+# Backend test
+curl http://localhost:3000/api
+
+# Frontend test (tarayıcıda)
+# http://SUNUCU_IP:5173
+
+# Database test
+docker exec -it isg_postgres psql -U isg_admin -d isg_denetim
+```
+
+---
+
+## 📝 Önemli Notlar ve İpuçları
+
+### Kurulum Sırasında Dikkat Edilecekler
+1. **Path'ler**: Tüm path'lerin (`/home/ubuntu/` veya `/root/`) tutarlı olduğundan emin olun
+2. **Dependency conflicts**: Mutlaka `--legacy-peer-deps` kullanın
+3. **Prisma**: `migrate deploy` yerine `db push` kullanın
+4. **CORS**: Backend `.env`'de `FRONTEND_URL` mutlaka olmalı
+5. **API URL**: Frontend'te `/api` ile bitmeli
+6. **Firewall**: Port 3000 ve 5173 mutlaka açık olmalı
+7. **0.0.0.0 binding**: Backend dışarıdan erişilebilir olmalı
+
+### Production Ortamı İçin Ek Öneriler
+1. **SSL/TLS**: Nginx ile reverse proxy ve Let's Encrypt SSL sertifikası kullanın
+2. **Domain**: IP yerine domain kullanın
+3. **Environment variables**: Tüm şifreleri ve secret'ları değiştirin
+4. **Backup**: Düzenli veritabanı yedeklemesi alın
+5. **Monitoring**: Log monitoring ve alert sistemi kurun
+6. **Updates**: Düzenli güvenlik güncellemeleri yapın
+
+### Performans İyileştirmeleri
+1. **PM2**: systemd yerine PM2 process manager kullanabilirsiniz
+2. **Nginx**: Static dosyalar için Nginx kullanın
+3. **Database**: PostgreSQL performans ayarlarını yapın
+4. **Caching**: Redis cache ekleyebilirsiniz
 
 ---
 
 **Başarılar! 🎉**
 
 İSG Denetim Sistemi başarıyla kuruldu ve kullanıma hazır!
+
+Herhangi bir sorun yaşarsanız, **Sorun Giderme** bölümüne bakın.
