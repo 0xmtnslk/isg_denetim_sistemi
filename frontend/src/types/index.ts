@@ -7,6 +7,8 @@ export interface User {
   email: string;
   role: UserRole;
   isActive: boolean;
+  groupId?: number | null;
+  group?: Group;
   createdAt: string;
   updatedAt: string;
 }
@@ -17,6 +19,10 @@ export interface Group {
   description?: string;
   isActive: boolean;
   facilities?: Facility[];
+  members?: User[];
+  _count?: {
+    members: number;
+  };
 }
 
 export interface Facility {
@@ -121,4 +127,13 @@ export interface Statistics {
     KARSILAMIYOR: number;
     KAPSAM_DISI: number;
   };
+}
+
+// API Response types
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
