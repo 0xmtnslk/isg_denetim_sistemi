@@ -18,7 +18,7 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Konfigürasyon
-PROJECT_DIR="/home/ubuntu/isg_denetim_sistemi"
+PROJECT_DIR="/root/isg_denetim_sistemi"
 BACKEND_DIR="$PROJECT_DIR/backend"
 FRONTEND_DIR="$PROJECT_DIR/frontend"
 LOG_FILE="/var/log/isg-deployment.log"
